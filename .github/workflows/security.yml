@@ -1,0 +1,265 @@
+name: Security
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  security-baseline:
+    name: security-baseline
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Block sensitive file patterns
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -Ei '(^|/)(\.env|\.env\..*|id_rsa|id_dsa|.*\.pem|.*\.p12|.*\.pfx)$'; then
+            echo "Potentially sensitive file pattern is tracked."
+            exit 1
+          fi
+
+      - name: Scan for secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="8.30.1"
+          expected_sha256="551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+          curl -sSL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz" \
+            -o gitleaks.tar.gz
+          echo "${expected_sha256}  gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks detect --source . --redact --no-banner
+
+      - name: Validate local secret-pattern canary
+        shell: bash
+        run: |
+          set -euo pipefail
+          canary="$RUNNER_TEMP/secret-canary.txt"
+          printf 'AKIA%s\n' '0000000000000000' > "$canary"
+          grep -Eq "AKIA[0-9A-Z]{16}" "$canary"
+
+      - name: Check public-safe language
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git "AKIA[0-9A-Z]{16}|BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY" .; then
+            echo "Potential secret-like content found."
+            exit 1
+          fi
+
+  dependency-review:
+    name: dependency-review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.repository.private == false
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
+        with:
+          fail-on-severity: moderate
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-1.0, AGPL-3.0
+
+  dependency-review-private:
+    name: dependency-review-private
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.repository.private == true
+    steps:
+      - name: Explain private repository dependency review
+        run: |
+          echo "Dependency review is skipped while this repository is private."
+          echo "Enable Dependency graph and GitHub Advanced Security, or make the repository public, before requiring dependency-review."
+
+  osv-scan:
+    name: osv-scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Scan dependencies with OSV
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! find . -path ./.git -prune -o \( \
+            -name 'package-lock.json' -o \
+            -name 'yarn.lock' -o \
+            -name 'pnpm-lock.yaml' -o \
+            -name 'pom.xml' -o \
+            -name 'build.gradle' -o \
+            -name 'build.gradle.kts' -o \
+            -name 'go.mod' -o \
+            -name 'requirements.txt' -o \
+            -name 'poetry.lock' -o \
+            -name 'Pipfile.lock' \
+          \) -print | grep -q .; then
+            echo "No dependency manifests found yet; OSV scan will become active when app dependencies are added."
+            exit 0
+          fi
+          docker run --rm -v "$PWD:/src" ghcr.io/google/osv-scanner:v2.3.4@sha256:1e606b76a6aea0843926e440d9f66e07b078cf6d538c4d73f7a777c6fcf69a0a scan source --recursive /src
+
+  workflow-lint:
+    name: workflow-lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="1.7.12"
+          expected_sha256="8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+          curl -sSL \
+            "https://github.com/rhysd/actionlint/releases/download/v${version}/actionlint_${version}_linux_amd64.tar.gz" \
+            -o actionlint.tar.gz
+          echo "${expected_sha256}  actionlint.tar.gz" | sha256sum --check --strict
+          tar -xzf actionlint.tar.gz actionlint
+          ./actionlint -version
+
+      - name: Lint GitHub Actions workflows
+        run: ./actionlint
+
+  workflow-security:
+    name: workflow-security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@b1d7e1fb5de872772f31590499237e7cce841e8e
+        with:
+          advanced-security: false
+          annotations: true
+          online-audits: false
+          persona: auditor
+          min-severity: medium
+          min-confidence: medium
+
+  codeql:
+    name: codeql
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Detect analyzable code
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+          languages=()
+          if [ -f frontend/package.json ] || find frontend -path frontend/node_modules -prune -o \( \
+            -name '*.js' -o \
+            -name '*.jsx' -o \
+            -name '*.ts' -o \
+            -name '*.tsx' \
+          \) -print -quit | grep -q .; then
+            languages+=("javascript-typescript")
+          fi
+          if [ -f backend/pom.xml ] || [ -f backend/build.gradle ] || [ -f backend/build.gradle.kts ] || { [ -d backend/src ] && find backend/src \( \
+            -name '*.java' -o \
+            -name '*.kt' \
+          \) -print -quit | grep -q .; }; then
+            languages+=("java-kotlin")
+          fi
+          if [ "${#languages[@]}" -gt 0 ]; then
+            echo "has_code=true" >> "$GITHUB_OUTPUT"
+            IFS=,
+            echo "languages=${languages[*]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_code=false" >> "$GITHUB_OUTPUT"
+            echo "languages=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Initialize CodeQL
+        if: steps.detect.outputs.has_code == 'true'
+        uses: github/codeql-action/init@865f5f5c36632f18690a3d569fa0a764f2da0c3e # v3
+        with:
+          languages: ${{ steps.detect.outputs.languages }}
+          build-mode: none
+
+      - name: Perform CodeQL analysis
+        if: steps.detect.outputs.has_code == 'true'
+        uses: github/codeql-action/analyze@865f5f5c36632f18690a3d569fa0a764f2da0c3e # v3
+
+      - name: Skip CodeQL until application code exists
+        if: steps.detect.outputs.has_code != 'true'
+        run: echo "No analyzable frontend or backend source exists yet; CodeQL will activate when application code is added."
+
+  platform-scans:
+    name: platform-scans
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: IaC scan placeholder
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find . -path ./.git -prune -o \( -name '*.tf' -o -name '*.tfvars' -o -name 'template.yaml' -o -name 'serverless.yml' \) -print | grep -q .; then
+            echo "IaC files detected. Add Checkov/tfsec scanning before merging IaC changes."
+            exit 1
+          fi
+          echo "No IaC files detected yet."
+
+      - name: Container scan placeholder
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find . -path ./.git -prune -o -iname 'Dockerfile*' -print | grep -q .; then
+            echo "Dockerfiles detected. Add Trivy container scanning before merging container changes."
+            exit 1
+          fi
+          echo "No Dockerfiles detected yet."

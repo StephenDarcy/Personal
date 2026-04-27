@@ -1,0 +1,41 @@
+version: 2
+updates:
+  # Application package managers are added when their manifests exist.
+  # Keeping this bootstrap config limited avoids noisy Dependabot errors before
+  # /frontend and /backend are scaffolded.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Dublin
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
+    labels:
+      - security
+      - ci
+    commit-message:
+      prefix: ci
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:20"
+      timezone: Europe/Dublin
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
+    labels:
+      - security
+      - frontend
+    commit-message:
+      prefix: frontend

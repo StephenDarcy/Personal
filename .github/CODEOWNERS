@@ -1,0 +1,14 @@
+# Default owner for all changes.
+* @StephenDarcy
+
+# Security, automation, and platform files need explicit owner review.
+/.github/ @StephenDarcy
+/SECURITY.md @StephenDarcy
+/docs/threat-model.md @StephenDarcy
+/docs/adr/ @StephenDarcy
+
+# Application ownership boundaries.
+/frontend/ @StephenDarcy
+/backend/ @StephenDarcy
+/contracts/ @StephenDarcy
+/infra/ @StephenDarcy

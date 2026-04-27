@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+set -eu
+
+if command -v pwsh >/dev/null 2>&1; then
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/security/preflight.ps1 -Scope Staged -SkipDependencyAudit
+elif command -v powershell.exe >/dev/null 2>&1; then
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/security/preflight.ps1 -Scope Staged -SkipDependencyAudit
+else
+  echo "PowerShell is required for the local security pre-commit hook." >&2
+  exit 1
+fi

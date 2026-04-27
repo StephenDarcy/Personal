@@ -1,0 +1,52 @@
+name: Feature or improvement
+description: Propose product, engineering, documentation, or platform work.
+title: "[Feature]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep this public-safe. Use only material intentionally prepared for this public repository.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What should be true when this is done?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why does this matter?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - frontend
+        - backend
+        - platform
+        - security
+        - architecture
+        - docs
+        - design-system
+        - ci
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Concrete checks that prove the work is complete.
+      placeholder: |
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and constraints
+      description: Security, privacy, cost, operational, accessibility, or compatibility concerns.

@@ -1,0 +1,83 @@
+name: Repository Setup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup-github-metadata:
+    name: setup-github-metadata
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Create labels and milestones
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const labels = [
+              { name: 'security', color: 'B60205', description: 'Security, privacy, supply chain, or trust-boundary work' },
+              { name: 'architecture', color: '5319E7', description: 'Architecture, system boundaries, or ADR work' },
+              { name: 'frontend', color: '1D76DB', description: 'Next.js frontend work' },
+              { name: 'backend', color: '0E8A16', description: 'Spring Boot backend work' },
+              { name: 'platform', color: '0052CC', description: 'Cloud, infrastructure, containers, or deployment work' },
+              { name: 'ci', color: 'FBCA04', description: 'CI/CD, automation, or repository workflow work' },
+              { name: 'docs', color: '0075CA', description: 'Documentation changes' },
+              { name: 'design-system', color: 'D93F0B', description: 'Custom component and visual system work' },
+              { name: 'good-first-task', color: '7057FF', description: 'Small, well-scoped starter task' },
+              { name: 'blocked', color: '000000', description: 'Blocked by another decision, task, or external setup' },
+              { name: 'adr-needed', color: 'C5DEF5', description: 'Needs an Architecture Decision Record' },
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                });
+                await github.rest.issues.updateLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description,
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...label,
+                });
+              }
+            }
+
+            const milestones = [
+              'Foundation',
+              'Design System',
+              'Backend API',
+              'Public Launch',
+              'Production Hardening',
+            ];
+
+            const existingMilestones = await github.paginate(github.rest.issues.listMilestones, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+            });
+            const existingTitles = new Set(existingMilestones.map((milestone) => milestone.title));
+
+            for (const title of milestones) {
+              if (!existingTitles.has(title)) {
+                await github.rest.issues.createMilestone({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title,
+                });
+              }
+            }

@@ -1,0 +1,31 @@
+name: Architecture decision
+description: Record a decision that affects architecture, cost, security, hosting, or long-term maintainability.
+title: "[ADR]: "
+labels:
+  - adr-needed
+  - architecture
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this to request or discuss an ADR. Final ADRs live in `docs/adr/`.
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision needed
+      description: What needs to be decided?
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options considered
+      description: List the serious options and tradeoffs.
+    validations:
+      required: true
+  - type: textarea
+    id: implications
+    attributes:
+      label: Security, cost, and operational implications
+    validations:
+      required: true
