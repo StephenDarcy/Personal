@@ -1,0 +1,578 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Stephen Darcy Personal Runtime Status API",
+    "summary": "Public runtime status boundary for the first backend vertical slice.",
+    "description": "Contract source for the public runtime status slice. The endpoints are read-only, accept no request body, and expose only public-safe operational status prepared for this site.",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com",
+      "description": "Public-safe example server."
+    }
+  ],
+  "tags": [
+    {
+      "name": "Runtime status",
+      "description": "Public-safe backend readiness and build metadata."
+    }
+  ],
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "getRuntimeHealth",
+        "summary": "Get public API readiness.",
+        "description": "Reports whether the public API process is ready to serve traffic. The response must not expose hostnames, dependency internals, environment names, account identifiers, commit history, or raw exception messages.",
+        "tags": [
+          "Runtime status"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The API process is ready to serve public traffic.",
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "examples": {
+                  "ready": {
+                    "summary": "Ready response with fake values.",
+                    "value": {
+                      "status": "ready",
+                      "serviceName": "personal-api",
+                      "checkedAt": "2026-01-15T10:30:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/version": {
+      "get": {
+        "operationId": "getRuntimeVersion",
+        "summary": "Get public build metadata.",
+        "description": "Reports public-safe build metadata prepared for release verification. The response must not include branch names, local paths, usernames, machine names, CI tokens, cloud account identifiers, or dependency inventories.",
+        "tags": [
+          "Runtime status"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public-safe version metadata for the deployed API.",
+            "headers": {
+              "X-Correlation-ID": {
+                "$ref": "#/components/headers/CorrelationId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionResponse"
+                },
+                "examples": {
+                  "release": {
+                    "summary": "Version response with fake values.",
+                    "value": {
+                      "serviceName": "personal-api",
+                      "version": "0.1.0",
+                      "buildTimestamp": "2026-01-15T10:00:00Z",
+                      "commitSha": "0123456789abcdef0123456789abcdef01234567"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "CorrelationId": {
+        "name": "X-Correlation-ID",
+        "in": "header",
+        "required": false,
+        "description": "Optional request correlation identifier. If omitted, the server generates one. Implementations should return the accepted or generated value in the `X-Correlation-ID` response header and in structured error responses. Invalid values should return a structured `400` error without echoing unsafe input.",
+        "schema": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "examples": [
+            "req_20260115_103000_demo"
+          ]
+        },
+        "example": "req_20260115_103000_demo"
+      }
+    },
+    "headers": {
+      "CorrelationId": {
+        "description": "Correlation identifier for the request. Echoes a valid supplied `X-Correlation-ID` value or contains a generated value when the request did not provide one.",
+        "schema": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "example": "req_20260115_103000_demo"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "The request could not be accepted because it was malformed or contained an invalid header.",
+        "headers": {
+          "X-Correlation-ID": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "invalidCorrelationId": {
+                "$ref": "#/components/examples/InvalidCorrelationIdError"
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "No public API route matched the request path.",
+        "headers": {
+          "X-Correlation-ID": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "notFound": {
+                "$ref": "#/components/examples/NotFoundError"
+              }
+            }
+          }
+        }
+      },
+      "MethodNotAllowed": {
+        "description": "The request used a method that is not supported for the route.",
+        "headers": {
+          "X-Correlation-ID": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "methodNotAllowed": {
+                "$ref": "#/components/examples/MethodNotAllowedError"
+              }
+            }
+          }
+        }
+      },
+      "NotAcceptable": {
+        "description": "The requested response content type is not supported.",
+        "headers": {
+          "X-Correlation-ID": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "notAcceptable": {
+                "$ref": "#/components/examples/NotAcceptableError"
+              }
+            }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "The request included a body or content type that is not supported for this read-only endpoint.",
+        "headers": {
+          "X-Correlation-ID": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "unsupportedMediaType": {
+                "$ref": "#/components/examples/UnsupportedMediaTypeError"
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "The server could not complete the request. The response must not expose raw exception details.",
+        "headers": {
+          "X-Correlation-ID": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "internalServerError": {
+                "$ref": "#/components/examples/InternalServerError"
+              }
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "The API process is not ready to serve public traffic.",
+        "headers": {
+          "X-Correlation-ID": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "serviceUnavailable": {
+                "$ref": "#/components/examples/ServiceUnavailableError"
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "serviceName",
+          "checkedAt"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Readiness state for public traffic.",
+            "enum": [
+              "ready"
+            ],
+            "examples": [
+              "ready"
+            ]
+          },
+          "serviceName": {
+            "type": "string",
+            "description": "Public service identifier prepared for release output.",
+            "minLength": 1,
+            "maxLength": 80,
+            "examples": [
+              "personal-api"
+            ]
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC timestamp when readiness was checked.",
+            "examples": [
+              "2026-01-15T10:30:00Z"
+            ]
+          }
+        }
+      },
+      "VersionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "serviceName",
+          "version",
+          "buildTimestamp",
+          "commitSha"
+        ],
+        "properties": {
+          "serviceName": {
+            "type": "string",
+            "description": "Public service identifier prepared for release output.",
+            "minLength": 1,
+            "maxLength": 80,
+            "examples": [
+              "personal-api"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "description": "Semantic version prepared for public release output.",
+            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$",
+            "examples": [
+              "0.1.0"
+            ]
+          },
+          "buildTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC timestamp for the build used to create the deployed API artifact.",
+            "examples": [
+              "2026-01-15T10:00:00Z"
+            ]
+          },
+          "commitSha": {
+            "type": "string",
+            "description": "Full Git commit SHA intentionally prepared for public release output.",
+            "pattern": "^[a-f0-9]{40}$",
+            "examples": [
+              "0123456789abcdef0123456789abcdef01234567"
+            ]
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "instance",
+          "correlationId"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Stable machine-readable error category.",
+            "minLength": 1,
+            "maxLength": 120,
+            "pattern": "^[a-z][a-z0-9.-]*$",
+            "examples": [
+              "request.invalid-header"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Short public-safe error summary.",
+            "minLength": 1,
+            "maxLength": 120,
+            "examples": [
+              "Invalid request header"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "description": "HTTP status code for the response.",
+            "minimum": 400,
+            "maximum": 599,
+            "examples": [
+              400
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "description": "Public-safe explanation. Do not include raw exception messages, hostnames, account identifiers, local paths, or unsafe request values.",
+            "minLength": 1,
+            "maxLength": 500,
+            "examples": [
+              "The supplied correlation identifier is not in an accepted format."
+            ]
+          },
+          "instance": {
+            "type": "string",
+            "description": "Request path or request instance identifier.",
+            "minLength": 1,
+            "maxLength": 200,
+            "examples": [
+              "/api/v1/health"
+            ]
+          },
+          "correlationId": {
+            "type": "string",
+            "description": "Correlation identifier associated with the request.",
+            "minLength": 8,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._:-]+$",
+            "examples": [
+              "req_20260115_103000_demo"
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "description": "Optional field-level validation details when validation applies.",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            }
+          }
+        }
+      },
+      "FieldError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "message"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Public contract field or header name.",
+            "minLength": 1,
+            "maxLength": 120,
+            "examples": [
+              "X-Correlation-ID"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "Public-safe validation message.",
+            "minLength": 1,
+            "maxLength": 240,
+            "examples": [
+              "Use 8 to 128 characters from letters, numbers, dot, underscore, colon, or hyphen."
+            ]
+          }
+        }
+      }
+    },
+    "examples": {
+      "InvalidCorrelationIdError": {
+        "summary": "Invalid correlation header with fake values.",
+        "value": {
+          "type": "request.invalid-header",
+          "title": "Invalid request header",
+          "status": 400,
+          "detail": "The supplied correlation identifier is not in an accepted format.",
+          "instance": "/api/v1/health",
+          "correlationId": "req_20260115_103000_demo",
+          "errors": [
+            {
+              "field": "X-Correlation-ID",
+              "message": "Use 8 to 128 characters from letters, numbers, dot, underscore, colon, or hyphen."
+            }
+          ]
+        }
+      },
+      "NotFoundError": {
+        "summary": "Unmapped route with fake values.",
+        "value": {
+          "type": "request.not-found",
+          "title": "Route not found",
+          "status": 404,
+          "detail": "No public API route matched the request path.",
+          "instance": "/api/v1/example",
+          "correlationId": "req_20260115_103000_demo"
+        }
+      },
+      "MethodNotAllowedError": {
+        "summary": "Unsupported method with fake values.",
+        "value": {
+          "type": "request.method-not-allowed",
+          "title": "Method not allowed",
+          "status": 405,
+          "detail": "The requested method is not supported for this public API route.",
+          "instance": "/api/v1/health",
+          "correlationId": "req_20260115_103000_demo"
+        }
+      },
+      "NotAcceptableError": {
+        "summary": "Unsupported response format with fake values.",
+        "value": {
+          "type": "request.not-acceptable",
+          "title": "Response format not supported",
+          "status": 406,
+          "detail": "This endpoint returns application/json responses.",
+          "instance": "/api/v1/version",
+          "correlationId": "req_20260115_103000_demo"
+        }
+      },
+      "UnsupportedMediaTypeError": {
+        "summary": "Unexpected request content with fake values.",
+        "value": {
+          "type": "request.unsupported-media-type",
+          "title": "Request content type not supported",
+          "status": 415,
+          "detail": "This read-only endpoint does not accept a request body.",
+          "instance": "/api/v1/health",
+          "correlationId": "req_20260115_103000_demo"
+        }
+      },
+      "InternalServerError": {
+        "summary": "Internal error with fake values.",
+        "value": {
+          "type": "runtime.internal-error",
+          "title": "Request could not be completed",
+          "status": 500,
+          "detail": "The server could not complete the request.",
+          "instance": "/api/v1/version",
+          "correlationId": "req_20260115_103000_demo"
+        }
+      },
+      "ServiceUnavailableError": {
+        "summary": "Readiness failure with fake values.",
+        "value": {
+          "type": "runtime.not-ready",
+          "title": "Service not ready",
+          "status": 503,
+          "detail": "The API is not ready to serve public traffic.",
+          "instance": "/api/v1/health",
+          "correlationId": "req_20260115_103000_demo"
+        }
+      }
+    }
+  }
+}

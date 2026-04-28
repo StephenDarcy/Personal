@@ -4,7 +4,7 @@ This document tracks the expected local development shape as runtime components 
 
 ## Current State
 
-The repository has a runnable frontend scaffold. Backend and contract scaffolds are still planned follow-up work.
+The repository has a runnable frontend scaffold and an initial OpenAPI source contract. Backend scaffolding is still planned follow-up work.
 
 ## Planned Commands
 
@@ -12,7 +12,7 @@ Once the runtime scaffolds exist, local development should provide checked-in co
 
 - Frontend install, lint, typecheck, and build.
 - Backend verify, test, and package.
-- Contract linting and generated-client drift checks.
+- Contract checks and generated-client drift checks.
 - Container build and local runtime smoke checks.
 
 Frontend commands:
@@ -24,6 +24,12 @@ npm install
 npm run lint
 npm run typecheck
 npm run build
+```
+
+Contract command:
+
+```powershell
+node scripts/contracts/check-openapi.mjs
 ```
 
 ## Security Rules
