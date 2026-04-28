@@ -1,40 +1,41 @@
 import Image from "next/image";
 import { ButtonLink } from "@/components/button-link";
 import { Section } from "@/components/section";
-import { SignalCard } from "@/components/signal-card";
-import { StatusList } from "@/components/status-list";
 import styles from "./page.module.css";
 
-const deliverySignals = [
-  { label: "ADR", value: "Decisions before drift" },
-  { label: "CI", value: "Checks before merge" },
-  { label: "API", value: "Contract-owned boundary" },
-  { label: "Ops", value: "Evidence over folklore" },
+const profileLinks = [
+  {
+    label: "GitHub",
+    href: "https://github.com/StephenDarcy",
+    variant: "primary" as const,
+  },
+  {
+    label: "LinkedIn",
+    href: "https://ie.linkedin.com/in/stephen-darcy-0871141b8",
+    variant: "secondary" as const,
+  },
 ];
 
-const platformAreas = [
+const stackGroups = [
   {
-    title: "Frontend craft",
-    detail: "Static-export Next.js, typed interfaces, and a component language I can keep refining in public.",
-    tone: "green" as const,
+    title: "Interfaces",
+    items: ["TypeScript", "Next.js", "React", "Accessible UI"],
   },
   {
-    title: "Backend API",
-    detail: "Spring Boot boundaries, validation, OpenAPI, and observable behavior before feature sprawl.",
-    tone: "blue" as const,
+    title: "Services",
+    items: ["Java", "Spring Boot", "OpenAPI", "Validation"],
   },
   {
-    title: "Delivery system",
-    detail: "Review, least-privilege automation, scanning, and release evidence as ordinary practice.",
-    tone: "rust" as const,
+    title: "Delivery",
+    items: ["Docker", "GitHub Actions", "Security hygiene", "Observability"],
   },
 ];
 
 const principles = [
-  "Public-safe by default",
+  "Factual public copy",
   "Small reviewable slices",
-  "Architecture recorded early",
-  "Static first when possible",
+  "Explicit architecture",
+  "Static-first delivery",
 ];
 
 export default function Home() {
@@ -42,21 +43,45 @@ export default function Home() {
     <main className={styles.pageShell}>
       <section className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.heroCopy}>
-          <p className={styles.kicker}>Public engineering platform</p>
+          <p className={styles.kicker}>Software engineer</p>
           <h1 id="hero-title">Stephen Darcy</h1>
           <p className={styles.lede}>
-            My production-shaped showcase for secure software delivery,
-            frontend craft, backend API design, and operational clarity.
+            I build production-shaped software across polished interfaces,
+            reliable services, cloud-aware architecture, and secure delivery
+            practices.
           </p>
-          <div className={styles.actions} aria-label="Primary project links">
-            <ButtonLink href="#system">View system shape</ButtonLink>
-            <ButtonLink href="#delivery" variant="secondary">
-              Review delivery signals
-            </ButtonLink>
+          <div className={styles.actions} aria-label="Professional links">
+            {profileLinks.map((link) => (
+              <ButtonLink
+                href={link.href}
+                key={link.label}
+                target="_blank"
+                rel="noreferrer"
+                variant={link.variant}
+              >
+                {link.label}
+              </ButtonLink>
+            ))}
           </div>
         </div>
 
-        <div className={styles.visualPanel} aria-label="Architecture delivery map">
+        <div className={styles.profilePanel} aria-label="Profile summary">
+          <div className={styles.portraitFrame}>
+            <Image
+              src="https://avatars.githubusercontent.com/u/55543547?v=4"
+              alt="Stephen Darcy GitHub avatar"
+              width={192}
+              height={192}
+              priority
+            />
+          </div>
+          <div className={styles.panelCopy}>
+            <p className={styles.panelLabel}>Public first slice</p>
+            <p>
+              A compact personal site focused on engineering range, public-safe
+              stack signals, and clear professional routes.
+            </p>
+          </div>
           <Image
             src="/architecture-mark.svg"
             alt=""
@@ -65,30 +90,57 @@ export default function Home() {
             height={540}
             priority
           />
-          <StatusList items={deliverySignals} />
         </div>
       </section>
 
       <Section
-        eyebrow="System shape"
-        id="system"
-        title="Built as a real platform from the first slice."
+        eyebrow="About"
+        id="about"
+        title="I care about the shape of the work, not just the screen it lands on."
       >
-        <div className={styles.areaGrid}>
-          {platformAreas.map((area) => (
-            <SignalCard label={area.title} tone={area.tone} key={area.title}>
-              <p>{area.detail}</p>
-            </SignalCard>
+        <p className={styles.sectionText}>
+          My public work centers on typed frontend systems, clear API
+          boundaries, reviewable architecture decisions, and delivery practices
+          that keep software understandable after the first release.
+        </p>
+      </Section>
+
+      <Section eyebrow="Stack" id="stack" title="A small public map of the tools and habits I use.">
+        <div className={styles.stackGrid}>
+          {stackGroups.map((group) => (
+            <article className={styles.stackCard} key={group.title}>
+              <h3>{group.title}</h3>
+              <ul>
+                {group.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
           ))}
         </div>
       </Section>
 
-      <Section
-        eyebrow="Delivery posture"
-        id="delivery"
-        title="Small PRs, explicit decisions, public-safe defaults."
-      >
-        <ul className={styles.principleList} aria-label="Delivery principles">
+      <Section eyebrow="Contact" id="contact" title="Find the public profile paths here.">
+        <div className={styles.contactBand}>
+          <p>
+            For now, this site keeps contact intentionally simple: GitHub for
+            code and repository work, LinkedIn for professional context.
+          </p>
+          <div className={styles.contactLinks}>
+            {profileLinks.map((link) => (
+              <ButtonLink
+                href={link.href}
+                key={link.label}
+                target="_blank"
+                rel="noreferrer"
+                variant={link.variant}
+              >
+                {link.label}
+              </ButtonLink>
+            ))}
+          </div>
+        </div>
+        <ul className={styles.principleList} aria-label="Public content principles">
           {principles.map((principle) => (
             <li key={principle}>{principle}</li>
           ))}
