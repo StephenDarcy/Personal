@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SkipLink } from "@/components/a11y";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SkipLink href="#main-content">Skip to content</SkipLink>
+        <main id="main-content" tabIndex={-1}>
+          {children}
+        </main>
+      </body>
     </html>
   );
 }

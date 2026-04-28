@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ButtonLink } from "@/components/button-link";
+import { Card, Cluster, Container, PillList } from "@/components/primitives";
 import { Section } from "@/components/section";
 import styles from "./page.module.css";
 
@@ -40,8 +41,8 @@ const principles = [
 
 export default function Home() {
   return (
-    <main className={styles.pageShell}>
-      <section className={styles.hero} aria-labelledby="hero-title">
+    <div className={styles.pageShell}>
+      <Container as="section" className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.heroCopy}>
           <p className={styles.kicker}>Software engineer</p>
           <h1 id="hero-title">Stephen Darcy</h1>
@@ -50,7 +51,7 @@ export default function Home() {
             reliable services, cloud-aware architecture, and secure delivery
             practices.
           </p>
-          <div className={styles.actions} aria-label="Professional links">
+          <Cluster className={styles.actions} aria-label="Professional links">
             {profileLinks.map((link) => (
               <ButtonLink
                 href={link.href}
@@ -62,7 +63,7 @@ export default function Home() {
                 {link.label}
               </ButtonLink>
             ))}
-          </div>
+          </Cluster>
         </div>
 
         <div className={styles.profilePanel} aria-label="Profile summary">
@@ -91,7 +92,7 @@ export default function Home() {
             priority
           />
         </div>
-      </section>
+      </Container>
 
       <Section
         eyebrow="About"
@@ -108,14 +109,9 @@ export default function Home() {
       <Section eyebrow="Stack" id="stack" title="A small public map of the tools and habits I use.">
         <div className={styles.stackGrid}>
           {stackGroups.map((group) => (
-            <article className={styles.stackCard} key={group.title}>
-              <h3>{group.title}</h3>
-              <ul>
-                {group.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
+            <Card heading={group.title} key={group.title}>
+              <PillList items={group.items} />
+            </Card>
           ))}
         </div>
       </Section>
@@ -126,7 +122,7 @@ export default function Home() {
             For now, this site keeps contact intentionally simple: GitHub for
             code and repository work, LinkedIn for professional context.
           </p>
-          <div className={styles.contactLinks}>
+          <Cluster className={styles.contactLinks} justify="end">
             {profileLinks.map((link) => (
               <ButtonLink
                 href={link.href}
@@ -138,7 +134,7 @@ export default function Home() {
                 {link.label}
               </ButtonLink>
             ))}
-          </div>
+          </Cluster>
         </div>
         <ul className={styles.principleList} aria-label="Public content principles">
           {principles.map((principle) => (
@@ -146,6 +142,6 @@ export default function Home() {
           ))}
         </ul>
       </Section>
-    </main>
+    </div>
   );
 }

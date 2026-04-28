@@ -28,4 +28,5 @@ npm install
 npm run lint
 npm run typecheck
 npm run build
+npm run accessibility
 ```
