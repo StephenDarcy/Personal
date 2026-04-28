@@ -4,7 +4,7 @@ This document tracks the expected local development shape as runtime components 
 
 ## Current State
 
-The repository has a runnable frontend scaffold and an initial OpenAPI source contract. Backend scaffolding is still planned follow-up work.
+The repository has a runnable frontend scaffold, an initial OpenAPI source contract, and the first Spring Boot runtime status API slice.
 
 ## Planned Commands
 
@@ -30,6 +30,13 @@ Contract command:
 
 ```powershell
 node scripts/contracts/check-openapi.mjs
+```
+
+Backend command:
+
+```powershell
+cd backend
+mvn --batch-mode verify
 ```
 
 ## Security Rules
