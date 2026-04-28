@@ -15,12 +15,33 @@ function get(path) {
   return path.split(".").reduce((value, key) => value?.[key], contract);
 }
 
+function getByPointer(pointer) {
+  return pointer
+    .replace(/^#\//, "")
+    .split("/")
+    .map((part) => part.replace(/~1/g, "/").replace(/~0/g, "~"))
+    .reduce((value, key) => value?.[key], contract);
+}
+
+function resolveRef(value) {
+  if (!value?.$ref) {
+    return value;
+  }
+  return getByPointer(value.$ref);
+}
+
 function hasRef(value, ref) {
   return value?.$ref === ref;
 }
 
 function responseFor(path, status) {
   return contract.paths?.[path]?.get?.responses?.[status];
+}
+
+function operationParameters(path) {
+  const pathItem = contract.paths?.[path] ?? {};
+  const operation = pathItem.get ?? {};
+  return [...(pathItem.parameters ?? []), ...(operation.parameters ?? [])].map(resolveRef);
 }
 
 function assertRuntimeOperation(path, operationId) {
@@ -82,11 +103,11 @@ assert(
   "/api/v1/health must reference the shared ServiceUnavailable response.",
 );
 assert(
-  !contract.paths?.["/api/v1/health"]?.get?.parameters?.some((p) => p.in === "query"),
+  !operationParameters("/api/v1/health").some((parameter) => parameter?.in === "query"),
   "/api/v1/health must not define query parameters.",
 );
 assert(
-  !contract.paths?.["/api/v1/version"]?.get?.parameters?.some((p) => p.in === "query"),
+  !operationParameters("/api/v1/version").some((parameter) => parameter?.in === "query"),
   "/api/v1/version must not define query parameters.",
 );
 
@@ -94,6 +115,10 @@ assertRequiredFields("HealthResponse", ["status", "serviceName", "checkedAt"]);
 assertRequiredFields("VersionResponse", ["serviceName", "version", "buildTimestamp", "commitSha"]);
 assertRequiredFields("ErrorResponse", ["type", "title", "status", "detail", "instance", "correlationId"]);
 assertRequiredFields("FieldError", ["field", "message"]);
+
+const versionPattern = new RegExp(get("components.schemas.VersionResponse.properties.version.pattern"));
+assert(versionPattern.test("1.2.3-rc.1+build.5"), "VersionResponse.version must allow prerelease plus build metadata.");
+assert(!versionPattern.test("1.2.3-"), "VersionResponse.version must reject incomplete prerelease metadata.");
 
 assert(
   get("components.schemas.ErrorResponse.properties.errors.items.$ref") ===
