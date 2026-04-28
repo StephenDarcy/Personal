@@ -16,8 +16,49 @@ function getAttribute(tag, name) {
   return match?.[1] ?? null;
 }
 
-function stripTags(value) {
-  return value.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+function normalizeText(value) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function textOutsideTags(fragment) {
+  let text = "";
+  let inTag = false;
+
+  for (const character of fragment) {
+    if (character === "<") {
+      inTag = true;
+      continue;
+    }
+
+    if (inTag) {
+      if (character === ">") {
+        inTag = false;
+      }
+      continue;
+    }
+
+    text += character;
+  }
+
+  return normalizeText(text);
+}
+
+function childImageAltText(fragment) {
+  const altValues = collect(/<img\b[^>]*>/gi, fragment)
+    .map((match) => getAttribute(match[0], "alt"))
+    .filter((alt) => alt && alt.trim().length > 0);
+
+  return normalizeText(altValues.join(" "));
+}
+
+function linkAccessibleName(fragment) {
+  return (
+    getAttribute(fragment, "aria-label") ||
+    textOutsideTags(fragment) ||
+    childImageAltText(fragment) ||
+    getAttribute(fragment, "title") ||
+    ""
+  );
 }
 
 const html = await readFile(htmlPath, "utf8").catch((error) => {
@@ -60,7 +101,7 @@ for (const match of collect(/\saria-labelledby=["']([^"']+)["']/gi, html)) {
 
 const headings = collect(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, html).map((match) => ({
   level: Number(match[1]),
-  text: stripTags(match[2]),
+  text: textOutsideTags(match[2]),
 }));
 
 if (headings.length === 0 || headings[0].level !== 1) {
@@ -79,7 +120,7 @@ for (let index = 1; index < headings.length; index += 1) {
 
 for (const match of collect(/<a\b[^>]*>[\s\S]*?<\/a>/gi, html)) {
   const tag = match[0];
-  const accessibleName = stripTags(tag) || getAttribute(tag, "aria-label") || getAttribute(tag, "title");
+  const accessibleName = linkAccessibleName(tag);
   if (!accessibleName) {
     fail(`link is missing accessible text: ${tag.slice(0, 80)}`);
   }
