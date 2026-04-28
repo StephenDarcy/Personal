@@ -19,4 +19,6 @@ This directory will contain the public Spring Boot API.
 
 ## Next Implementation Step
 
-The next backend PR should add the Spring Boot scaffold, health and version endpoints, Maven verification, Docker build path, and CI coverage.
+The next backend PR should implement the public runtime status slice from [ADR 0009](../docs/adr/0009-first-backend-vertical-slice.md): Spring Boot scaffold, `GET /api/v1/health`, `GET /api/v1/version`, structured errors, request correlation, narrow CORS, Maven verification, Docker build path, and CI coverage.
+
+Do not add product data, persistence, authentication, contact workflows, analytics collection, or other visitor-submitted data in this slice.

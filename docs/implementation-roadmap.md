@@ -86,11 +86,23 @@ Exit criteria:
 
 Build a small API slice that proves production behavior without premature data storage.
 
+Initial capability:
+
+- Public runtime status slice from [ADR 0009](adr/0009-first-backend-vertical-slice.md).
+
 Initial endpoints:
 
-- Health.
-- Version/build metadata.
-- Public profile or content summary, if needed by the frontend.
+- `GET /api/v1/health`.
+- `GET /api/v1/version`.
+
+Explicitly deferred:
+
+- Public profile or content summary.
+- Product data.
+- Contact workflows.
+- Analytics collection.
+- Persistence.
+- Authentication.
 
 Required backend traits:
 

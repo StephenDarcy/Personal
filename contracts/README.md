@@ -16,4 +16,12 @@ This directory will contain API contracts and generated-client rules.
 
 ## Next Implementation Step
 
-The first contract PR should add an OpenAPI source file, contract linting, generated-client conventions, and drift checks once the backend and frontend scaffolds exist.
+The first contract PR should add an OpenAPI source file for the public runtime status slice from [ADR 0009](../docs/adr/0009-first-backend-vertical-slice.md), covering:
+
+- `GET /api/v1/health`
+- `GET /api/v1/version`
+- Shared structured error responses
+- Correlation headers
+- Public-safe examples
+
+It should also add contract linting, generated-client conventions, and drift checks once the backend and frontend scaffolds exist.
