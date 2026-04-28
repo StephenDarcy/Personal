@@ -41,7 +41,7 @@ const principles = [
 
 export default function Home() {
   return (
-    <main className={styles.pageShell} id="main-content" tabIndex={-1}>
+    <div className={styles.pageShell}>
       <Container as="section" className={styles.hero} aria-labelledby="hero-title">
         <div className={styles.heroCopy}>
           <p className={styles.kicker}>Software engineer</p>
@@ -142,6 +142,6 @@ export default function Home() {
           ))}
         </ul>
       </Section>
-    </main>
+    </div>
   );
 }

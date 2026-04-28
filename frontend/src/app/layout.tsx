@@ -17,7 +17,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <SkipLink href="#main-content">Skip to content</SkipLink>
-        {children}
+        <main id="main-content" tabIndex={-1}>
+          {children}
+        </main>
       </body>
     </html>
   );
