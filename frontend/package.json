@@ -10,7 +10,8 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "accessibility": "node scripts/check-accessibility.mjs"
   },
   "dependencies": {
     "next": "16.2.4",

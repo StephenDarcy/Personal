@@ -1,0 +1,85 @@
+.container {
+  width: min(var(--layout-max), calc(100% - var(--space-page)));
+  margin: 0 auto;
+}
+
+.panel {
+  color: var(--color-canvas);
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.align-start {
+  align-items: flex-start;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.justify-start {
+  justify-content: flex-start;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.card {
+  min-height: 210px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-soft);
+}
+
+.card h3 {
+  margin: 0;
+  font-size: var(--font-size-3);
+  line-height: 1.18;
+}
+
+.pillList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pillList li {
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface-soft) 70%, white);
+  padding: 8px 11px;
+  color: var(--color-ink);
+  font-size: var(--font-size-00);
+  font-weight: 760;
+  line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: min(100% - 28px, var(--layout-max));
+  }
+}
+
+@media (max-width: 520px) {
+  .cluster {
+    width: 100%;
+  }
+
+  .justify-end {
+    justify-content: flex-start;
+  }
+}
