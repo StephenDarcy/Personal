@@ -2,6 +2,7 @@ package com.stephendarcy.personal.runtime;
 
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -149,6 +150,13 @@ class RuntimeStatusApiTests {
             .andExpect(jsonPath("$.type").value("request.validation-failed"))
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.errors[0].field").value("query"));
+    }
+
+    @Test
+    void headRequestsUseRuntimeRouteValidation() throws Exception {
+        mockMvc.perform(head("/api/v1/health?detail=true"))
+            .andExpect(status().isBadRequest())
+            .andExpect(header().string(CorrelationIds.HEADER, matchesPattern(CORRELATION_PATTERN)));
     }
 
     @Test

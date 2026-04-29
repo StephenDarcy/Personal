@@ -40,7 +40,7 @@ public class RuntimeStatusRequestValidationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (!HttpMethod.GET.matches(request.getMethod())) {
+        if (!isGetLikeMethod(request)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -90,6 +90,10 @@ public class RuntimeStatusRequestValidationFilter extends OncePerRequestFilter {
         String contextPath = request.getContextPath();
         String path = contextPath.isBlank() ? requestPath : requestPath.substring(contextPath.length());
         return "/api/v1/health".equals(path) || "/api/v1/version".equals(path);
+    }
+
+    private boolean isGetLikeMethod(HttpServletRequest request) {
+        return HttpMethod.GET.matches(request.getMethod()) || HttpMethod.HEAD.matches(request.getMethod());
     }
 
     private boolean acceptsJson(HttpServletRequest request) {
