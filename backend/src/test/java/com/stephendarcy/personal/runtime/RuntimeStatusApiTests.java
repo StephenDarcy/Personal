@@ -198,4 +198,14 @@ class RuntimeStatusApiTests {
             .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, org.hamcrest.Matchers.containsString("GET")))
             .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, org.hamcrest.Matchers.containsString(CorrelationIds.HEADER)));
     }
+
+    @Test
+    void allowedFrontendOriginCanPreflightHeadRuntimeRequest() throws Exception {
+        mockMvc.perform(options("/api/v1/health")
+                .header(HttpHeaders.ORIGIN, "http://localhost:3000")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "HEAD"))
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000"))
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, org.hamcrest.Matchers.containsString("HEAD")));
+    }
 }

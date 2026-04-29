@@ -30,7 +30,7 @@ public class ApiWebConfiguration {
     FilterRegistrationBean<CorsFilter> apiCorsFilter() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(corsProperties.allowedOrigin()));
-        configuration.setAllowedMethods(List.of("GET", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "HEAD", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(HttpHeaders.ACCEPT, HttpHeaders.CONTENT_TYPE, CorrelationIds.HEADER));
         configuration.setExposedHeaders(List.of(CorrelationIds.HEADER));
         configuration.setMaxAge(300L);
