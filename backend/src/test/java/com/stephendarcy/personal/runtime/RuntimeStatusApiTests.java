@@ -152,6 +152,15 @@ class RuntimeStatusApiTests {
     }
 
     @Test
+    void filterGeneratedErrorsPreserveCorsHeadersForAllowedFrontendOrigin() throws Exception {
+        mockMvc.perform(get("/api/v1/health?detail=true").header(HttpHeaders.ORIGIN, "http://localhost:3000"))
+            .andExpect(status().isBadRequest())
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000"))
+            .andExpect(header().string(HttpHeaders.VARY, org.hamcrest.Matchers.containsString("Origin")))
+            .andExpect(jsonPath("$.type").value("request.validation-failed"));
+    }
+
+    @Test
     void runtimeRouteValidationAppliesWithServletContextPath() throws Exception {
         mockMvc.perform(get("/personal/api/v1/health?detail=true").contextPath("/personal"))
             .andExpect(status().isBadRequest())
