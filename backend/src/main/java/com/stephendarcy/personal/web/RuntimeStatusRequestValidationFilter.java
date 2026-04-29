@@ -40,6 +40,11 @@ public class RuntimeStatusRequestValidationFilter extends OncePerRequestFilter {
             return;
         }
 
+        if (!HttpMethod.GET.matches(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (!acceptsJson(request)) {
             errorWriter.write(
                 request,
@@ -49,11 +54,6 @@ public class RuntimeStatusRequestValidationFilter extends OncePerRequestFilter {
                 "Response format not supported",
                 "This endpoint returns application/json responses."
             );
-            return;
-        }
-
-        if (!HttpMethod.GET.matches(request.getMethod())) {
-            filterChain.doFilter(request, response);
             return;
         }
 
@@ -99,7 +99,9 @@ public class RuntimeStatusRequestValidationFilter extends OncePerRequestFilter {
         try {
             List<MediaType> requestedTypes = MediaType.parseMediaTypes(acceptHeaders);
             return requestedTypes.stream().anyMatch((requestedType) ->
-                requestedType.includes(MediaType.ALL) || requestedType.isCompatibleWith(MediaType.APPLICATION_JSON)
+                requestedType.getQualityValue() > 0.0
+                    && (requestedType.includes(MediaType.APPLICATION_JSON)
+                        || requestedType.isCompatibleWith(MediaType.APPLICATION_JSON))
             );
         }
         catch (InvalidMediaTypeException ex) {

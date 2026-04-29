@@ -84,6 +84,15 @@ class RuntimeStatusApiTests {
     }
 
     @Test
+    void unsupportedMethodReturnsMethodErrorBeforeAcceptNegotiation() throws Exception {
+        mockMvc.perform(post("/api/v1/health").accept(MediaType.TEXT_PLAIN))
+            .andExpect(status().isMethodNotAllowed())
+            .andExpect(header().string(HttpHeaders.ALLOW, org.hamcrest.Matchers.containsString("GET")))
+            .andExpect(jsonPath("$.type").value("request.method-not-allowed"))
+            .andExpect(jsonPath("$.status").value(405));
+    }
+
+    @Test
     void unsupportedResponseFormatReturnsStructuredError() throws Exception {
         mockMvc.perform(get("/api/v1/version").accept(MediaType.APPLICATION_XML))
             .andExpect(status().isNotAcceptable())
@@ -91,6 +100,15 @@ class RuntimeStatusApiTests {
             .andExpect(jsonPath("$.type").value("request.not-acceptable"))
             .andExpect(jsonPath("$.status").value(406))
             .andExpect(jsonPath("$.instance").value("/api/v1/version"));
+    }
+
+    @Test
+    void jsonWithZeroQualityReturnsStructuredNotAcceptableError() throws Exception {
+        mockMvc.perform(get("/api/v1/version").header(HttpHeaders.ACCEPT, "application/json;q=0"))
+            .andExpect(status().isNotAcceptable())
+            .andExpect(header().string(CorrelationIds.HEADER, matchesPattern(CORRELATION_PATTERN)))
+            .andExpect(jsonPath("$.type").value("request.not-acceptable"))
+            .andExpect(jsonPath("$.status").value(406));
     }
 
     @Test
