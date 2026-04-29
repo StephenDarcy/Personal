@@ -54,8 +54,13 @@ public class ApiExceptionHandler {
         HttpRequestMethodNotSupportedException ex,
         HttpServletRequest request
     ) {
+        HttpHeaders headers = errorHeaders(request);
+        if (ex.getSupportedHttpMethods() != null) {
+            headers.setAllow(ex.getSupportedHttpMethods());
+        }
         return error(
             request,
+            headers,
             HttpStatus.METHOD_NOT_ALLOWED,
             "request.method-not-allowed",
             "Method not allowed",
@@ -139,13 +144,40 @@ public class ApiExceptionHandler {
         String detail,
         List<FieldErrorDetail> errors
     ) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(CorrelationIds.HEADER, CorrelationIds.current(request));
+        return error(request, errorHeaders(request), status, type, title, detail, errors);
+    }
+
+    private ResponseEntity<ApiErrorResponse> error(
+        HttpServletRequest request,
+        HttpHeaders headers,
+        HttpStatus status,
+        String type,
+        String title,
+        String detail
+    ) {
+        return error(request, headers, status, type, title, detail, List.of());
+    }
+
+    private ResponseEntity<ApiErrorResponse> error(
+        HttpServletRequest request,
+        HttpHeaders headers,
+        HttpStatus status,
+        String type,
+        String title,
+        String detail,
+        List<FieldErrorDetail> errors
+    ) {
         return new ResponseEntity<>(
             errorFactory.create(request, status, type, title, detail, errors),
             headers,
             status
         );
+    }
+
+    private HttpHeaders errorHeaders(HttpServletRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(CorrelationIds.HEADER, CorrelationIds.current(request));
+        return headers;
     }
 }

@@ -76,6 +76,7 @@ class RuntimeStatusApiTests {
     void unsupportedMethodReturnsStructuredError() throws Exception {
         mockMvc.perform(post("/api/v1/health").accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isMethodNotAllowed())
+            .andExpect(header().string(HttpHeaders.ALLOW, org.hamcrest.Matchers.containsString("GET")))
             .andExpect(header().string(CorrelationIds.HEADER, matchesPattern(CORRELATION_PATTERN)))
             .andExpect(jsonPath("$.type").value("request.method-not-allowed"))
             .andExpect(jsonPath("$.status").value(405))
