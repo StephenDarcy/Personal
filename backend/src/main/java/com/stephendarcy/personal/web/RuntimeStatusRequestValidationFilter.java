@@ -86,7 +86,9 @@ public class RuntimeStatusRequestValidationFilter extends OncePerRequestFilter {
     }
 
     private boolean isRuntimeStatusPath(HttpServletRequest request) {
-        String path = request.getRequestURI();
+        String requestPath = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        String path = contextPath.isBlank() ? requestPath : requestPath.substring(contextPath.length());
         return "/api/v1/health".equals(path) || "/api/v1/version".equals(path);
     }
 
@@ -98,15 +100,44 @@ public class RuntimeStatusRequestValidationFilter extends OncePerRequestFilter {
 
         try {
             List<MediaType> requestedTypes = MediaType.parseMediaTypes(acceptHeaders);
-            return requestedTypes.stream().anyMatch((requestedType) ->
-                requestedType.getQualityValue() > 0.0
-                    && (requestedType.includes(MediaType.APPLICATION_JSON)
-                        || requestedType.isCompatibleWith(MediaType.APPLICATION_JSON))
-            );
+            return qualityForJson(requestedTypes) > 0.0;
         }
         catch (InvalidMediaTypeException ex) {
             return false;
         }
+    }
+
+    private double qualityForJson(List<MediaType> requestedTypes) {
+        MediaType bestMatch = null;
+        int bestSpecificity = -1;
+
+        for (MediaType requestedType : requestedTypes) {
+            if (!requestedType.includes(MediaType.APPLICATION_JSON)
+                && !requestedType.isCompatibleWith(MediaType.APPLICATION_JSON)) {
+                continue;
+            }
+
+            int specificity = specificityForJson(requestedType);
+            if (specificity > bestSpecificity
+                || (specificity == bestSpecificity
+                    && bestMatch != null
+                    && requestedType.getQualityValue() > bestMatch.getQualityValue())) {
+                bestMatch = requestedType;
+                bestSpecificity = specificity;
+            }
+        }
+
+        return bestMatch == null ? 0.0 : bestMatch.getQualityValue();
+    }
+
+    private int specificityForJson(MediaType requestedType) {
+        if (MediaType.APPLICATION_JSON.equalsTypeAndSubtype(requestedType)) {
+            return 2;
+        }
+        if ("application".equals(requestedType.getType()) && requestedType.isWildcardSubtype()) {
+            return 1;
+        }
+        return 0;
     }
 
     private boolean hasRequestBodyMetadata(HttpServletRequest request) {

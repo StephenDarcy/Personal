@@ -112,6 +112,15 @@ class RuntimeStatusApiTests {
     }
 
     @Test
+    void explicitJsonExclusionWinsOverWildcardAcceptHeader() throws Exception {
+        mockMvc.perform(get("/api/v1/version").header(HttpHeaders.ACCEPT, "application/json;q=0, */*;q=0.8"))
+            .andExpect(status().isNotAcceptable())
+            .andExpect(header().string(CorrelationIds.HEADER, matchesPattern(CORRELATION_PATTERN)))
+            .andExpect(jsonPath("$.type").value("request.not-acceptable"))
+            .andExpect(jsonPath("$.status").value(406));
+    }
+
+    @Test
     void unexpectedContentTypeReturnsStructuredUnsupportedMediaTypeError() throws Exception {
         mockMvc.perform(get("/api/v1/health").contentType(MediaType.TEXT_PLAIN))
             .andExpect(status().isUnsupportedMediaType())
@@ -140,6 +149,15 @@ class RuntimeStatusApiTests {
             .andExpect(jsonPath("$.type").value("request.validation-failed"))
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.errors[0].field").value("query"));
+    }
+
+    @Test
+    void runtimeRouteValidationAppliesWithServletContextPath() throws Exception {
+        mockMvc.perform(get("/personal/api/v1/health?detail=true").contextPath("/personal"))
+            .andExpect(status().isBadRequest())
+            .andExpect(header().string(CorrelationIds.HEADER, matchesPattern(CORRELATION_PATTERN)))
+            .andExpect(jsonPath("$.type").value("request.validation-failed"))
+            .andExpect(jsonPath("$.instance").value("/personal/api/v1/health"));
     }
 
     @Test
