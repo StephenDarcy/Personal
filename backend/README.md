@@ -7,7 +7,7 @@ This directory contains the public Spring Boot API.
 - Framework: Spring Boot 3.5.x.
 - Runtime: Java 21.
 - Build: Maven.
-- Packaging: executable Spring Boot jar. Container packaging should be added with the matching container scan gate before a Dockerfile is introduced.
+- Packaging: executable Spring Boot jar and Spring Boot buildpack image.
 
 ## Boundaries
 
@@ -54,7 +54,7 @@ cd backend
 mvn --batch-mode spring-boot:build-image -Dspring-boot.build-image.imageName=personal-api:local
 ```
 
-The image command requires a local Docker-compatible runtime. Do not add a Dockerfile until container scanning is wired into the repository security gates.
+The image command requires a local Docker-compatible runtime.
 
 Example local checks:
 
@@ -62,3 +62,11 @@ Example local checks:
 Invoke-RestMethod -Uri "http://localhost:8080/api/v1/health" -Headers @{ "X-Correlation-ID" = "req_20260115_103000_demo" }
 Invoke-RestMethod -Uri "http://localhost:8080/api/v1/version"
 ```
+
+Build and smoke-test the backend container from the repository root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backend/smoke-container.ps1 -ImageName personal-api:local
+```
+
+CI builds the same buildpack image, scans it with Trivy, and exercises `/api/v1/health` and `/api/v1/version` from the running container. Keep Dockerfile-based packaging out of this repository unless the workflow security gates are updated for that path.
