@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: personal-api
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+
+server:
+  error:
+    whitelabel:
+      enabled: false
+
+app:
+  runtime:
+    service-name: personal-api
+    version: "0.1.0"
+    build-timestamp: "2026-01-15T10:00:00Z"
+    commit-sha: "0123456789abcdef0123456789abcdef01234567"
+  cors:
+    allowed-origin: "http://localhost:3000"
