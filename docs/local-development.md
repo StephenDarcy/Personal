@@ -12,7 +12,8 @@ Local development provides checked-in commands for:
 
 - Frontend install, lint, typecheck, and build.
 - Backend verify, test, and package.
-- Contract checks and generated-client drift checks.
+- The current OpenAPI contract check.
+- Planned generated-client generation and drift checks.
 - Container build and local runtime smoke checks.
 
 Frontend commands:
@@ -31,6 +32,15 @@ Contract command:
 ```powershell
 node scripts/contracts/check-openapi.mjs
 ```
+
+Planned generated frontend client commands from ADR 0010:
+
+```powershell
+npm --prefix frontend run contracts:generate
+npm --prefix frontend run contracts:check
+```
+
+These commands should regenerate the runtime status TypeScript client from `contracts/runtime-status.openapi.json` and check committed output under `frontend/src/api/generated/runtime-status/` for drift. They are intentionally not wired until the generator dependencies and drift script are added in the follow-up implementation issue.
 
 Backend command:
 

@@ -13,6 +13,7 @@ This directory contains the public Spring Boot API.
 
 - Keep the backend as the system of record for server-side behavior.
 - Publish OpenAPI documentation for public endpoints.
+- Keep implemented behavior, structured errors, correlation behavior, and OpenAPI contract changes aligned in the same API slice.
 - Add explicit validation, structured errors, request correlation, and narrow CORS rules with the first API slice.
 - Do not store durable visitor-submitted data or add private authenticated areas without an ADR and threat-model update.
 - Keep sample configuration obviously fake and free of real secrets, credentials, and account IDs.
@@ -30,6 +31,8 @@ The first backend slice implements the public runtime status boundary from [ADR 
 Both endpoints are read-only and accept no request body, query parameters, or path parameters.
 
 Do not add product data, persistence, authentication, contact workflows, analytics collection, or other visitor-submitted data in this slice.
+
+Frontend TypeScript clients for these endpoints should be generated from `contracts/runtime-status.openapi.json` under `frontend/src/api/generated/runtime-status/` once the generated-client scripts are implemented. A backend API change is incomplete until backend behavior, the source contract, generated frontend output, and drift checks agree.
 
 ## Local Verification
 

@@ -122,12 +122,12 @@ Exit criteria:
 
 ## Phase 5: Contract Integration
 
-Connect the frontend to the backend through generated API contracts.
+Connect the frontend to the backend through generated API contracts. ADR 0010 defines the planned generated-client location, committed-output policy, and drift-check workflow.
 
 Exit criteria:
 
 - The OpenAPI contract is the source of truth.
-- Frontend clients are generated or checked from the contract.
+- Frontend clients are generated and checked from the contract.
 - CI fails when generated client output is stale.
 - Contract examples contain only public-safe fake values.
 

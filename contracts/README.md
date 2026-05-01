@@ -7,12 +7,13 @@ This directory contains API contracts and generated-client rules.
 - OpenAPI is the boundary between the frontend and backend.
 - Backend behavior must match the published contract.
 - Frontend API clients should be generated from the contract rather than handwritten.
+- Generated frontend client output belongs to the frontend package under `frontend/src/api/generated/`.
 
 ## Boundaries
 
 - Contract examples must use obviously fake values.
 - Contract changes should be reviewed with both frontend and backend impact in mind.
-- CI should eventually fail when generated clients or published API output drift from the source contract.
+- Generated clients should be committed and checked for drift against the source contract in CI.
 
 ## Source Contracts
 
@@ -40,4 +41,19 @@ Run the dependency-free contract check from the repository root:
 node scripts/contracts/check-openapi.mjs
 ```
 
-Generated-client conventions and drift checks should be added once frontend client generation exists.
+## Generated Frontend Client Plan
+
+ADR 0010 defines the generated frontend client workflow. The planned runtime status output location is:
+
+```text
+frontend/src/api/generated/runtime-status/
+```
+
+Generated output should be committed as reviewable public source. The follow-up implementation should add pinned frontend generator dependencies and expose:
+
+```powershell
+npm --prefix frontend run contracts:generate
+npm --prefix frontend run contracts:check
+```
+
+`contracts:generate` should regenerate the committed TypeScript client from `contracts/runtime-status.openapi.json`. `contracts:check` should regenerate into a temporary location and fail when the committed output differs from the source contract.
