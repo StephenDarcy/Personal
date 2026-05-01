@@ -89,8 +89,42 @@ jobs:
           npm test --if-present
           npm run build --if-present
 
-      - name: Set up Java when backend exists
-        if: ${{ hashFiles('backend/pom.xml') != '' }}
+  backend-verification:
+    name: backend-verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect backend changes
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            if [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              base="$(git rev-list --max-parents=0 "$head")"
+            fi
+          fi
+
+          changed_files="$(git diff --name-only "$base" "$head")"
+          printf '%s\n' "$changed_files"
+          if printf '%s\n' "$changed_files" | grep -Eq '^(backend/|scripts/backend/|\.github/workflows/ci\.yml$)'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Java
+        if: steps.changes.outputs.changed == 'true'
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: temurin
@@ -98,7 +132,7 @@ jobs:
           cache: maven
 
       - name: Backend checks
-        if: ${{ hashFiles('backend/pom.xml') != '' }}
+        if: steps.changes.outputs.changed == 'true'
         working-directory: backend
         shell: bash
         run: |
@@ -108,3 +142,90 @@ jobs:
           else
             mvn --batch-mode verify
           fi
+
+      - name: Skip backend checks
+        if: steps.changes.outputs.changed != 'true'
+        run: echo "No backend-affecting files changed; skipping backend Maven verification."
+
+  backend-container:
+    name: backend-container
+    runs-on: ubuntu-latest
+    needs: backend-verification
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect backend changes
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            if [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              base="$(git rev-list --max-parents=0 "$head")"
+            fi
+          fi
+
+          changed_files="$(git diff --name-only "$base" "$head")"
+          printf '%s\n' "$changed_files"
+          if printf '%s\n' "$changed_files" | grep -Eq '^(backend/|scripts/backend/|\.github/workflows/ci\.yml$)'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Java
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Build backend image
+        if: steps.changes.outputs.changed == 'true'
+        working-directory: backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -x ./mvnw ]; then
+            ./mvnw --batch-mode -DskipTests spring-boot:build-image -Dspring-boot.build-image.imageName=personal-api:ci
+          else
+            mvn --batch-mode -DskipTests spring-boot:build-image -Dspring-boot.build-image.imageName=personal-api:ci
+          fi
+
+      - name: Install Trivy
+        if: steps.changes.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="0.70.0"
+          expected_sha256="8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9"
+          curl -sSL \
+            "https://github.com/aquasecurity/trivy/releases/download/v${version}/trivy_${version}_Linux-64bit.tar.gz" \
+            -o trivy.tar.gz
+          echo "${expected_sha256}  trivy.tar.gz" | sha256sum --check --strict
+          tar -xzf trivy.tar.gz trivy
+          ./trivy --version
+
+      - name: Scan backend image
+        if: steps.changes.outputs.changed == 'true'
+        shell: bash
+        run: ./trivy image --no-progress --severity HIGH,CRITICAL --exit-code 1 personal-api:ci
+
+      - name: Smoke test backend image
+        if: steps.changes.outputs.changed == 'true'
+        shell: pwsh
+        run: ./scripts/backend/smoke-container.ps1 -ImageName personal-api:ci -HostPort 18080 -SkipBuild
+
+      - name: Skip backend container checks
+        if: steps.changes.outputs.changed != 'true'
+        run: echo "No backend-affecting files changed; skipping backend container scan and smoke checks."

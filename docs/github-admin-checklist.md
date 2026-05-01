@@ -46,6 +46,11 @@ Private-repo strict substitutes that should be required now:
 
 Update the required check list as app-specific CI jobs are added.
 
+Backend status checks to require after Issue #13 lands:
+
+- `backend-verification`
+- `backend-container`
+
 After the repository is public, apply the baseline protection from a local admin checkout:
 
 ```powershell
