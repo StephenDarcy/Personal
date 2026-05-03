@@ -42,6 +42,15 @@ npm --prefix frontend run contracts:check
 
 These commands regenerate the runtime status TypeScript client from `contracts/runtime-status.openapi.json` and check committed output under `frontend/src/api/generated/runtime-status/` for drift. The frontend package pins `@hey-api/openapi-ts`; `contracts:check` writes regenerated output to a temporary directory and compares it with the committed client without modifying the working tree.
 
+Runtime status frontend reads:
+
+```powershell
+$env:NEXT_PUBLIC_RUNTIME_STATUS_API_BASE_URL = "http://localhost:8080"
+npm --prefix frontend run dev
+```
+
+The frontend operational evidence section reads `/api/v1/health` and `/api/v1/version` through the generated client after hydration. When the frontend is served from `localhost`, it defaults to `http://localhost:8080` if no public API base URL is set. Other environments should set `NEXT_PUBLIC_RUNTIME_STATUS_API_BASE_URL` to the public runtime API base URL. Unavailable or unconfigured API responses render a public-safe fallback state and do not block static rendering.
+
 Backend command:
 
 ```powershell

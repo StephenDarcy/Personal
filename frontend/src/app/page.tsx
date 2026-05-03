@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { ButtonLink } from "@/components/button-link";
 import { Card, Cluster, Container, PillList } from "@/components/primitives";
+import { RuntimeStatusEvidence } from "@/components/runtime-status-evidence";
 import { Section } from "@/components/section";
 import styles from "./page.module.css";
 
@@ -114,6 +115,10 @@ export default function Home() {
             </Card>
           ))}
         </div>
+      </Section>
+
+      <Section eyebrow="Operations" id="operations" title="Runtime signals from the public API boundary.">
+        <RuntimeStatusEvidence />
       </Section>
 
       <Section eyebrow="Contact" id="contact" title="Find the public profile paths here.">

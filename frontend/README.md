@@ -39,7 +39,17 @@ The drift check regenerates into a temporary directory and compares the temporar
 
 Generated files are included in TypeScript checking and production builds. ESLint ignores `src/api/generated/` because the generator owns that source formatting.
 
-The first safe runtime status consumption point is a future client-side operational evidence integration that reads `/api/v1/health` and `/api/v1/version` after hydration. Do not wire live backend calls into the public app until a follow-up issue explicitly expands the scope.
+## Runtime Status API
+
+The operational evidence section reads `/api/v1/health` and `/api/v1/version` through the generated runtime status client after hydration. Static rendering does not require the backend to be available.
+
+For local development, the client uses `http://localhost:8080` when the page is served from `localhost` and no public API base URL is configured. For other environments, set:
+
+```powershell
+NEXT_PUBLIC_RUNTIME_STATUS_API_BASE_URL=https://api.example.com
+```
+
+Unavailable or unconfigured API responses render a public-safe fallback state.
 
 ## Next Implementation Step
 
