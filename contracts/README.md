@@ -41,19 +41,19 @@ Run the dependency-free contract check from the repository root:
 node scripts/contracts/check-openapi.mjs
 ```
 
-## Generated Frontend Client Plan
+## Generated Frontend Client
 
-ADR 0010 defines the generated frontend client workflow. The planned runtime status output location is:
+ADR 0010 defines the generated frontend client workflow. The runtime status client is generated from [runtime-status.openapi.json](runtime-status.openapi.json) into:
 
 ```text
 frontend/src/api/generated/runtime-status/
 ```
 
-Generated output should be committed as reviewable public source. The follow-up implementation should add pinned frontend generator dependencies and expose:
+Generated output is committed as reviewable public source. The frontend package pins `@hey-api/openapi-ts` as the generator dependency and exposes:
 
 ```powershell
 npm --prefix frontend run contracts:generate
 npm --prefix frontend run contracts:check
 ```
 
-`contracts:generate` should regenerate the committed TypeScript client from `contracts/runtime-status.openapi.json`. `contracts:check` should regenerate into a temporary location and fail when the committed output differs from the source contract.
+`contracts:generate` regenerates the committed TypeScript client. `contracts:check` regenerates the same client into a temporary location and fails when the committed output differs from the source contract. CI enforcement for that drift check is tracked separately from the local workflow.

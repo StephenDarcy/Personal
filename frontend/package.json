@@ -11,7 +11,9 @@
     "build": "next build",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "accessibility": "node scripts/check-accessibility.mjs"
+    "accessibility": "node scripts/check-accessibility.mjs",
+    "contracts:generate": "node scripts/generate-runtime-status-client.mjs",
+    "contracts:check": "node scripts/check-runtime-status-client-drift.mjs"
   },
   "dependencies": {
     "next": "16.2.4",
@@ -19,6 +21,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "0.97.0",
     "@types/node": "22.19.17",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
