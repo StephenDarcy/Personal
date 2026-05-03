@@ -25,7 +25,8 @@ $requiredChecks = @(
     "workflow-lint",
     "workflow-security",
     "codeql",
-    "platform-scans"
+    "platform-scans",
+    "generated-client-drift"
 )
 
 $protection = @{
