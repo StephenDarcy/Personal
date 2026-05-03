@@ -19,16 +19,25 @@ This directory contains the public Next.js application.
 
 ## Generated API Clients
 
-ADR 0010 places generated TypeScript clients in `src/api/generated/`. The runtime status client should be generated into `src/api/generated/runtime-status/` from `../contracts/runtime-status.openapi.json`.
+ADR 0010 places generated TypeScript clients in `src/api/generated/`. The runtime status client is generated into `src/api/generated/runtime-status/` from `../contracts/runtime-status.openapi.json`.
 
-Generated output should be committed. Drift checks should regenerate the client into a temporary location and compare it with the committed output instead of silently updating files in CI.
+Generated output is committed as reviewable public source. The frontend package pins `@hey-api/openapi-ts` and uses the generator's fetch client output for this contract.
 
-Planned commands for the follow-up implementation:
+Regenerate the committed client:
 
 ```powershell
 npm run contracts:generate
+```
+
+Check for stale committed output without modifying the working tree:
+
+```powershell
 npm run contracts:check
 ```
+
+The drift check regenerates into a temporary directory and compares the temporary output with `src/api/generated/runtime-status/`.
+
+Generated files are included in TypeScript checking and production builds. ESLint ignores `src/api/generated/` because the generator owns that source formatting.
 
 The first safe runtime status consumption point is a future client-side operational evidence integration that reads `/api/v1/health` and `/api/v1/version` after hydration. Do not wire live backend calls into the public app until a follow-up issue explicitly expands the scope.
 
@@ -45,4 +54,6 @@ npm run lint
 npm run typecheck
 npm run build
 npm run accessibility
+npm run contracts:generate
+npm run contracts:check
 ```
