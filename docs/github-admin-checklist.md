@@ -51,6 +51,10 @@ Backend status checks to require after Issue #13 lands:
 - `backend-verification`
 - `backend-container`
 
+Generated-client status checks to require after Issue #20 lands:
+
+- `generated-client-drift`
+
 After the repository is public, apply the baseline protection from a local admin checkout:
 
 ```powershell

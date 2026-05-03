@@ -89,6 +89,61 @@ jobs:
           npm test --if-present
           npm run build --if-present
 
+  generated-client-drift:
+    name: generated-client-drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect generated-client drift check changes
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            if [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              base="$(git rev-list --max-parents=0 "$head")"
+            fi
+          fi
+
+          changed_files="$(git diff --name-only "$base" "$head")"
+          printf '%s\n' "$changed_files"
+          if printf '%s\n' "$changed_files" | grep -Eq '^(contracts/|frontend/src/api/generated/|frontend/package(-lock)?\.json$|frontend/scripts/(check-runtime-status-client-drift|generate-runtime-status-client|runtime-status-client-generator)\.mjs$|\.github/workflows/ci\.yml$)'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Check generated runtime status client drift
+        if: steps.changes.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --prefix frontend
+          node scripts/contracts/check-openapi.mjs
+          npm --prefix frontend run contracts:check
+
+      - name: Skip generated-client drift check
+        if: steps.changes.outputs.changed != 'true'
+        run: echo "No generated-client-affecting files changed; skipping generated-client drift check."
+
   backend-verification:
     name: backend-verification
     runs-on: ubuntu-latest

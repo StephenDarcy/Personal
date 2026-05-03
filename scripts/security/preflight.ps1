@@ -131,7 +131,7 @@ function Invoke-PublicContentHygiene {
         'scripts/security/preflight.ps1',
         '.gitignore'
     )
-    $toneScanExcludedPathPattern = '(^|/)(scripts|\.github/workflows)(/|$)'
+    $toneScanExcludedPathPattern = '(^|/)(scripts|\.github/workflows|frontend/src/api/generated)(/|$)'
     $automationLanguagePatterns = @(
         @{ Name = "local AI/tooling reference"; Pattern = '(?i)\b(Codex|ChatGPT|Claude|OpenAI|LLM|AI[- ]?assisted|AI[- ]?generated|AI slop)\b' },
         @{ Name = "assistant instruction language"; Pattern = '(?i)\b(system prompt|developer prompt|prompt injection|assistant instructions?|agent instructions?)\b' },
